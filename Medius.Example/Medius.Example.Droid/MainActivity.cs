@@ -20,6 +20,7 @@ namespace Medius.Example.Droid
             base.OnCreate(bundle);
 
             global::Xamarin.Forms.Forms.Init(this, bundle);
+            global::Medius.Droid.Core.Init();
             LoadApplication(new App());
         }
     }
