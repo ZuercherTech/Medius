@@ -3,8 +3,27 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Medius.Example.App">
   <Application.Resources>
+    <ResourceDictionary>
+      <Color x:Key="Background">#181818</Color>
+      <Color x:Key="AltBackground">#585858</Color>
+      <Color x:Key="Foreground">#7CAFC2</Color>
 
-    <!-- Application resource dictionary -->
+      <Style TargetType="ContentPage">
+        <Setter Property="BackgroundColor" Value="{StaticResource Background}" />
+      </Style>
 
+      <Style TargetType="StackLayout">
+        <Setter Property="BackgroundColor" Value="{StaticResource Background}" />
+      </Style>
+
+      <Style TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource AltBackground}" />
+        <Setter Property="TextColor" Value="{StaticResource Foreground}" />
+      </Style>
+
+      <Style TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource Foreground}" />
+      </Style>
+    </ResourceDictionary>
   </Application.Resources>
 </Application>

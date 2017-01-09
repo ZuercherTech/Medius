@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xamarin.Forms;
 
 namespace Medius.Example
@@ -16,31 +12,30 @@ namespace Medius.Example
 
         public void Page1Click(object sender, EventArgs eventArgs)
         {
-            PageView.Content = GetPage(1, Color.Blue);
+            PageView.Content = GetPage(1);
         }
 
         public void Page2Click(object sender, EventArgs eventArgs)
         {
-            PageView.Content = GetPage(2, Color.Red);
+            PageView.Content = GetPage(2);
         }
 
         public void Page3Click(object sender, EventArgs eventArgs)
         {
-            PageView.Content = GetPage(3, Color.Green);
+            PageView.Content = GetPage(3);
         }
 
         public void Page4Click(object sender, EventArgs eventArgs)
         {
-            PageView.Content = GetPage(4, Color.Lime);
+            PageView.Content = GetPage(4);
         }
 
-        private ContentPage GetPage(int index, Color color)
+        private ContentPage GetPage(int index)
         {
             return new ContentPage
             {
                 Content = new StackLayout
                 {
-                    BackgroundColor = color,
                     HorizontalOptions = LayoutOptions.FillAndExpand,
                     VerticalOptions = LayoutOptions.FillAndExpand,
                     Children =
