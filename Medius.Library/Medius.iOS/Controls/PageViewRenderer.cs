@@ -30,7 +30,7 @@ namespace Medius.iOS.Controls
 		{
 			if (page == null)
 			{
-				if (Control != null)
+				if (Control?.ViewController != null)
 				{
 					Control.ViewController = null;
 				}

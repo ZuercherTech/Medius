@@ -12,41 +12,22 @@ namespace Medius.Example
 
         public void Page1Click(object sender, EventArgs eventArgs)
         {
-            PageView.Content = GetPage(1);
+            PageView.Content = new Pages.Page1();
         }
 
         public void Page2Click(object sender, EventArgs eventArgs)
         {
-            PageView.Content = GetPage(2);
+            // PageView.Content = GetPage(2);
         }
 
         public void Page3Click(object sender, EventArgs eventArgs)
         {
-            PageView.Content = GetPage(3);
+            // PageView.Content = GetPage(3);
         }
 
         public void Page4Click(object sender, EventArgs eventArgs)
         {
-            PageView.Content = GetPage(4);
-        }
-
-        private ContentPage GetPage(int index)
-        {
-            return new ContentPage
-            {
-                Content = new StackLayout
-                {
-                    HorizontalOptions = LayoutOptions.FillAndExpand,
-                    VerticalOptions = LayoutOptions.FillAndExpand,
-                    Children =
-                    {
-                        new Label
-                        {
-                            Text = $"Page {index}"
-                        }
-                    }
-                }
-            };
+            // PageView.Content = GetPage(4);
         }
     }
 }
