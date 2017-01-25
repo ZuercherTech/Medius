@@ -1,28 +1,36 @@
 ﻿using System.ComponentModel;
+using CoreGraphics;
 using Medius.Core.Controls;
 using Medius.Core.Extensions;
 using Medius.iOS.Controls;
+using UIKit;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.iOS;
 
 [assembly:ExportRenderer(typeof(PageView), typeof(PageViewRenderer))]
 namespace Medius.iOS.Controls
 {
-	public class PageViewRenderer : ViewRenderer<PageView, ViewControllerView>
+	public class PageViewRenderer : ViewRenderer<PageView, UIView>
 	{
-		protected override void OnElementChanged(ElementChangedEventArgs<PageView> e)
+		private PageRenderer ParentPageRenderer { get; set; }
+
+		private PageRenderer _pageRenderer;
+		private PageRenderer PageRenderer
 		{
-			base.OnElementChanged(e);
-
-			if (Control != null)
+			get { return _pageRenderer; }
+			set
 			{
-				Control.ViewController = null;
-			}
+				if (_pageRenderer != null)
+				{
+					RemovePageRenderer();
+				}
 
-			if (e.NewElement != null)
-			{
-				var viewControllerView = new ViewControllerView(Bounds);
-				SetNativeControl(viewControllerView);
+				_pageRenderer = value;
+
+				if (_pageRenderer != null)
+				{
+					AddPageRenderer();
+				}
 			}
 		}
 
@@ -30,21 +38,42 @@ namespace Medius.iOS.Controls
 		{
 			if (page == null)
 			{
-				if (Control?.ViewController != null)
+				if (Element != null)
 				{
-					Control.ViewController = null;
+					SetNativeControl(new UIView());
 				}
 				return;
 			}
 
-			page.Parent = Element.GetParentPage();
-
 			var parentPage = Element.GetParentPage();
-			var parentPageRenderer = Platform.GetRenderer(parentPage);
-			Control.ParentViewController = parentPageRenderer.ViewController;
+			page.Parent = parentPage;
+			ParentPageRenderer = Platform.GetRenderer(parentPage) as PageRenderer;
 
-			var pageRenderer = Platform.GetRenderer(page);
-			Control.ViewController = pageRenderer?.ViewController ?? page.CreateViewController();
+			if (Platform.GetRenderer(page) == null)
+			{
+				Platform.SetRenderer(page, Platform.CreateRenderer(page));
+			}
+
+			PageRenderer = Platform.GetRenderer(page) as PageRenderer;
+		}
+
+		private void RemovePageRenderer()
+		{
+			PageRenderer.WillMoveToParentViewController(null);
+			SetNativeControl(new UIView());
+			PageRenderer.RemoveFromParentViewController();
+		}
+
+		private void AddPageRenderer()
+		{
+			SetNativeControl(PageRenderer.NativeView);
+
+			ParentPageRenderer.AddChildViewController(PageRenderer.ViewController);
+
+			PageRenderer.NativeView.Frame = new CGRect(0, 0, Bounds.Width, Bounds.Height);
+			PageRenderer.SetElementSize(new Size(Bounds.Width, Bounds.Height));
+
+			PageRenderer.DidMoveToParentViewController(ParentPageRenderer);
 		}
 
 		public override void LayoutSubviews()
