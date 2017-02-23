@@ -11,6 +11,7 @@
       <Button Text="Page 2" Clicked="Page2Click"></Button>
       <Button Text="Page 3" Clicked="Page3Click"></Button>
       <Button Text="Page 4" Clicked="Page4Click"></Button>
+      <Button Text="No Page" Clicked="NoPageClick"></Button>
     </StackLayout>
   
     <medius:PageView x:Name="PageView" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" />

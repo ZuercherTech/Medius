@@ -30,6 +30,11 @@ namespace Medius.Example
             PageView.Content = GetPage(4);
         }
 
+        public void NoPageClick(object sender, EventArgs eventArgs)
+        {
+            PageView.Content = null;
+        }
+
         private Page GetPage(int number)
         {
             return new ContentPage

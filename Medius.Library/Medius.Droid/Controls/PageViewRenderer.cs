@@ -1,22 +1,11 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-
-using Android.App;
-using Android.Content;
-using Android.OS;
-using Android.Runtime;
 using Android.Views;
-using Android.Widget;
 using Medius.Core.Controls;
 using Medius.Core.Extensions;
-using Medius.Droid.Controls;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
 
-[assembly:ExportRenderer(typeof(PageView), typeof(PageViewRenderer))]
+[assembly:ExportRenderer(typeof(PageView), typeof(Medius.Droid.Controls.PageViewRenderer))]
 namespace Medius.Droid.Controls
 {
     public class PageViewRenderer : ViewRenderer<PageView, Android.Views.View>
@@ -27,61 +16,88 @@ namespace Medius.Droid.Controls
             ChangePage(e.NewElement?.Content);
         }
 
-        private Page CurrentPage { get; set; }
-
         private bool NeedsLayout { get; set; }
+
+        private PageRenderer _pageRenderer;
+        private PageRenderer PageRenderer
+        {
+            get { return _pageRenderer; }
+            set
+            {
+                if (_pageRenderer != null)
+                {
+                    RemovePageRenderer();
+                }
+
+                _pageRenderer = value;
+
+                if (_pageRenderer != null)
+                {
+                    AddPageRenderer();
+                }
+            }
+        }
 
         private void ChangePage(Page page)
         {
-            //TODO handle current page
-            if (page != null)
+            if (page == null)
             {
-                page.Parent = Element.GetParentPage();
-
-                var renderer = Platform.GetRenderer(page);
-                if (renderer == null)
-                {
-                    var newRenderer = Platform.CreateRenderer(page);
-                    Platform.SetRenderer(page, newRenderer);
-                    renderer = newRenderer;
-                }
-
-                NeedsLayout = true;
-                SetNativeControl(renderer.ViewGroup);
-                Invalidate();
-
-                //TODO update the page
-                CurrentPage = page;
-            }
-            else
-            {
-                //TODO - update the page
-                CurrentPage = null;
+                PageRenderer = null;
+                return;
             }
 
-            if (CurrentPage == null)
+            var parentPage = Element.GetParentPage();
+            page.Parent = parentPage;
+
+            if (Platform.GetRenderer(page) == null)
             {
-                var view = new Android.Views.View(Context);
-                view.SetBackgroundColor(Element.BackgroundColor.ToAndroid());
-                SetNativeControl(view);
+                Platform.SetRenderer(page, Platform.CreateRenderer(page));
             }
+
+            PageRenderer = Platform.GetRenderer(page) as PageRenderer;
+
+            var renderer = Platform.GetRenderer(page);
+            if (renderer == null)
+            {
+                var newRenderer = Platform.CreateRenderer(page);
+                Platform.SetRenderer(page, newRenderer);
+                renderer = newRenderer;
+            }
+        }
+
+        private void RemovePageRenderer()
+        {
+            SetNativeControl(new Android.Views.View(Context));
+            (PageRenderer.ViewGroup.Parent as ViewGroup)?.RemoveView(PageRenderer.ViewGroup);
+
+            NeedsLayout = true;
+            Invalidate();
+        }
+
+        private void AddPageRenderer()
+        {
+            SetNativeControl(PageRenderer.ViewGroup);
+
+            NeedsLayout = true;
+            Invalidate();
         }
 
         protected override void OnLayout(bool changed, int l, int t, int r, int b)
         {
             base.OnLayout(changed, l, t, r, b);
-            if ((changed || NeedsLayout) && Control != null)
+            if (changed || NeedsLayout)
             {
-                if (CurrentPage != null)
+                var page = Element?.Content;
+                page?.Layout(new Rectangle(0, 0, Element.Width, Element.Height));
+
+                if (Control != null)
                 {
-                    CurrentPage.Layout(new Rectangle(0, 0, Element.Width, Element.Height));
+                    var msw = MeasureSpec.MakeMeasureSpec(r - l, MeasureSpecMode.Exactly);
+                    var msh = MeasureSpec.MakeMeasureSpec(b - t, MeasureSpecMode.Exactly);
+
+                    Control.Measure(msw, msh);
+                    Control.Layout(0, 0, r, b);
                 }
-
-                var msw = MeasureSpec.MakeMeasureSpec(r - l, MeasureSpecMode.Exactly);
-                var msh = MeasureSpec.MakeMeasureSpec(b - t, MeasureSpecMode.Exactly);
-
-                Control.Measure(msw, msh);
-                Control.Layout(0, 0, r, b);
 
                 NeedsLayout = false;
             }
@@ -90,7 +106,7 @@ namespace Medius.Droid.Controls
         protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnElementPropertyChanged(sender, e);
-            if (e.PropertyName == "Content")
+            if (e.PropertyName == nameof(Element.Content))
             {
                 ChangePage(Element?.Content);
             }

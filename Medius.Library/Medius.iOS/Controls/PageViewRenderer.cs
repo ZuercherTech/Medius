@@ -2,12 +2,11 @@
 using CoreGraphics;
 using Medius.Core.Controls;
 using Medius.Core.Extensions;
-using Medius.iOS.Controls;
 using UIKit;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.iOS;
 
-[assembly:ExportRenderer(typeof(PageView), typeof(PageViewRenderer))]
+[assembly:ExportRenderer(typeof(PageView), typeof(Medius.iOS.Controls.PageViewRenderer))]
 namespace Medius.iOS.Controls
 {
 	public class PageViewRenderer : ViewRenderer<PageView, UIView>
@@ -38,10 +37,7 @@ namespace Medius.iOS.Controls
 		{
 			if (page == null)
 			{
-				if (Element != null)
-				{
-					SetNativeControl(new UIView());
-				}
+                PageRenderer = null;
 				return;
 			}
 
@@ -60,8 +56,11 @@ namespace Medius.iOS.Controls
 		private void RemovePageRenderer()
 		{
 			PageRenderer.WillMoveToParentViewController(null);
+            
 			SetNativeControl(new UIView());
-			PageRenderer.RemoveFromParentViewController();
+
+            PageRenderer.RemoveFromParentViewController();
+            PageRenderer.View.RemoveFromSuperview();
 		}
 
 		private void AddPageRenderer()
@@ -87,9 +86,9 @@ namespace Medius.iOS.Controls
 		protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
 			base.OnElementPropertyChanged(sender, e);
-			if (e.PropertyName == "Content" || e.PropertyName == "Renderer")
+			if (e.PropertyName == nameof(Element.Content))
 			{
-				Device.BeginInvokeOnMainThread(() => ChangePage(Element?.Content));
+				ChangePage(Element?.Content);
 			}
 		}
 	}
