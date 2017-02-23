@@ -17,17 +17,28 @@ namespace Medius.Example
 
         public void Page2Click(object sender, EventArgs eventArgs)
         {
-            // PageView.Content = GetPage(2);
+            PageView.Content = new Pages.Page2();
         }
 
         public void Page3Click(object sender, EventArgs eventArgs)
         {
-            // PageView.Content = GetPage(3);
+            PageView.Content = GetPage(3);
         }
 
         public void Page4Click(object sender, EventArgs eventArgs)
         {
-            // PageView.Content = GetPage(4);
+            PageView.Content = GetPage(4);
+        }
+
+        private Page GetPage(int number)
+        {
+            return new ContentPage
+            {
+                Content = new Label
+                {
+                    Text = number.ToString()
+                }
+            };
         }
     }
 }
