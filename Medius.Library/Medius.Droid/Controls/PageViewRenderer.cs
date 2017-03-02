@@ -1,5 +1,8 @@
+using System;
 using System.ComponentModel;
+using Android.App;
 using Android.Views;
+using Android.Views.Animations;
 using Medius.Core.Controls;
 using Medius.Core.Extensions;
 using Xamarin.Forms;
@@ -10,12 +13,6 @@ namespace Medius.Droid.Controls
 {
     public class PageViewRenderer : ViewRenderer<PageView, Android.Views.View>
     {
-        protected override void OnElementChanged(ElementChangedEventArgs<PageView> e)
-        {
-            base.OnElementChanged(e);
-            ChangePage(e.NewElement?.Content);
-        }
-
         private bool NeedsLayout { get; set; }
 
         private PageRenderer _pageRenderer;
@@ -55,20 +52,11 @@ namespace Medius.Droid.Controls
             }
 
             PageRenderer = Platform.GetRenderer(page) as PageRenderer;
-
-            var renderer = Platform.GetRenderer(page);
-            if (renderer == null)
-            {
-                var newRenderer = Platform.CreateRenderer(page);
-                Platform.SetRenderer(page, newRenderer);
-                renderer = newRenderer;
-            }
         }
 
         private void RemovePageRenderer()
         {
-            SetNativeControl(new Android.Views.View(Context));
-            (PageRenderer.ViewGroup.Parent as ViewGroup)?.RemoveView(PageRenderer.ViewGroup);
+            PageRenderer.RemoveFromParent();
 
             NeedsLayout = true;
             Invalidate();
@@ -76,10 +64,84 @@ namespace Medius.Droid.Controls
 
         private void AddPageRenderer()
         {
-            SetNativeControl(PageRenderer.ViewGroup);
+            ViewGroup parentView = null;
+            if (!Element.IsFloating)
+            {
+                PageRenderer.ViewGroup.Layout(0, 0, Width, Height);
+
+                parentView = this;
+            }
+            else
+            {
+                var dimensions = GetViewDimensions(false);
+                PageRenderer.ViewGroup.LayoutParameters = new ViewGroup.LayoutParams((int) dimensions.Width,
+                    (int) dimensions.Height);
+                PageRenderer.ViewGroup.TranslationX = (int) dimensions.X;
+                PageRenderer.ViewGroup.TranslationY = (int) dimensions.Y;
+                
+                parentView = (Context as Activity).Window.DecorView as ViewGroup;
+                
+                PageRenderer.ViewGroup.Visibility = ViewStates.Visible;
+
+                var metrics = this.Resources.DisplayMetrics;
+                Element.Content.Layout(new Rectangle(0, 0, 
+                    dimensions.Width / metrics.Density, dimensions.Height / metrics.Density));
+            }
+
+            parentView.AddView(PageRenderer);
 
             NeedsLayout = true;
             Invalidate();
+        }
+
+        private Rectangle GetViewDimensions(bool show)
+        {
+            var metrics = this.Resources.DisplayMetrics;
+            var mainDimensions = new Rectangle(0, 0,
+                metrics.WidthPixels, metrics.HeightPixels);
+
+            var dimensions = mainDimensions;
+            if (Element.WidthRequest > 0)
+            {
+                dimensions.Width = Element.WidthRequest * metrics.Density;
+            }
+            if (Element.HeightRequest > 0)
+            {
+                dimensions.Height = Element.HeightRequest * metrics.Density;
+            }
+
+            switch (Element.AttachTo)
+            {
+                case PanelAttachPoint.Left:
+                    dimensions.X = (show) ? 0 : -dimensions.Width;
+                    break;
+                case PanelAttachPoint.Top:
+                    dimensions.Y = (show) ? 0 : -dimensions.Height;
+                    break;
+                case PanelAttachPoint.Right:
+                    dimensions.X = (show) ? mainDimensions.Width - dimensions.Width : mainDimensions.Width;
+                    break;
+                case PanelAttachPoint.Bottom:
+                    dimensions.Y = (show) ? mainDimensions.Height - dimensions.Height : mainDimensions.Height;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return dimensions;
+        }
+
+        private void SetShown(bool shouldShow)
+        {
+            if (PageRenderer?.ViewGroup == null) return;
+
+            var dimensions = GetViewDimensions(shouldShow);
+            PageRenderer.ViewGroup.Animate()
+                .SetDuration(250)
+                .SetInterpolator(new DecelerateInterpolator())
+                .TranslationX((float) dimensions.X)
+                .TranslationY((float) dimensions.Y)
+                .Start();
         }
 
         protected override void OnLayout(bool changed, int l, int t, int r, int b)
@@ -90,17 +152,25 @@ namespace Medius.Droid.Controls
                 var page = Element?.Content;
                 page?.Layout(new Rectangle(0, 0, Element.Width, Element.Height));
 
-                if (Control != null)
+                if (PageRenderer?.ViewGroup != null)
                 {
                     var msw = MeasureSpec.MakeMeasureSpec(r - l, MeasureSpecMode.Exactly);
                     var msh = MeasureSpec.MakeMeasureSpec(b - t, MeasureSpecMode.Exactly);
 
-                    Control.Measure(msw, msh);
-                    Control.Layout(0, 0, r, b);
+                    PageRenderer.Measure(msw, msh);
+                    PageRenderer.Layout(0, 0, r, b);
                 }
 
                 NeedsLayout = false;
             }
+        }
+
+        protected override void OnElementChanged(ElementChangedEventArgs<PageView> e)
+        {
+            base.OnElementChanged(e);
+
+            ChangePage(Element.Content);
+            SetShown(Element.Shown);
         }
 
         protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -109,6 +179,10 @@ namespace Medius.Droid.Controls
             if (e.PropertyName == nameof(Element.Content))
             {
                 ChangePage(Element?.Content);
+            }
+            else if (e.PropertyName == nameof(Element.Shown))
+            {
+                SetShown(Element.Shown);
             }
         }
     }

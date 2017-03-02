@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using CoreGraphics;
 using Medius.Core.Controls;
 using Medius.Core.Extensions;
@@ -56,24 +57,39 @@ namespace Medius.iOS.Controls
 		private void RemovePageRenderer()
 		{
 			PageRenderer.WillMoveToParentViewController(null);
-            
-			SetNativeControl(new UIView());
 
             PageRenderer.RemoveFromParentViewController();
             PageRenderer.View.RemoveFromSuperview();
 		}
 
 		private void AddPageRenderer()
-		{
-			SetNativeControl(PageRenderer.NativeView);
+        {
+            UIViewController parentViewController = null;
+		    UIView parentView = null;
+		    if (!Element.IsFloating)
+		    {
+                PageRenderer.View.Frame = new CGRect(0, 0, Bounds.Width, Bounds.Height);
 
-			ParentPageRenderer.AddChildViewController(PageRenderer.ViewController);
+                parentViewController = ParentPageRenderer;
+		        parentView = this;
+		    }
+		    else
+		    {
+                PageRenderer.View.Frame = GetViewDimensions(false);
 
-			PageRenderer.NativeView.Frame = new CGRect(0, 0, Bounds.Width, Bounds.Height);
-			PageRenderer.SetElementSize(new Size(Bounds.Width, Bounds.Height));
+                parentViewController = UIApplication.SharedApplication.KeyWindow.RootViewController;
+		        parentView = UIApplication.SharedApplication.KeyWindow;
+		    }
 
-			PageRenderer.DidMoveToParentViewController(ParentPageRenderer);
-		}
+            PageRenderer.SetElementSize(new Size(Bounds.Width, Bounds.Height));
+
+            parentView.AddSubview(PageRenderer.View);
+            parentViewController.AddChildViewController(PageRenderer);
+			PageRenderer.DidMoveToParentViewController(parentViewController);
+
+            PageRenderer.View.Hidden = false;
+            Element.Content.Layout(PageRenderer.View.Frame.ToRectangle());
+        }
 
 		public override void LayoutSubviews()
 		{
@@ -83,12 +99,69 @@ namespace Medius.iOS.Controls
 			page?.Layout(new Rectangle(0, 0, Bounds.Width, Bounds.Height));
 		}
 
-		protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
+	    private CGRect GetViewDimensions(bool show)
+	    {
+	        var mainDimensions = UIScreen.MainScreen.Bounds;
+            var dimensions = UIScreen.MainScreen.Bounds;
+            if (Element.WidthRequest > 0)
+            {
+                dimensions.Width = (nfloat)Element.WidthRequest;
+            }
+            if (Element.HeightRequest > 0)
+            {
+                dimensions.Height = (nfloat)Element.HeightRequest;
+            }
+
+	        switch (Element.AttachTo)
+	        {
+	            case PanelAttachPoint.Left:
+                    dimensions.X = (show) ? 0 : -dimensions.Width;
+                    break;
+	            case PanelAttachPoint.Top:
+	                dimensions.Y = (show) ? 0 : -dimensions.Height;
+	                break;
+	            case PanelAttachPoint.Right:
+	                dimensions.X = (show) ? mainDimensions.Width - dimensions.Width : mainDimensions.Width;
+	                break;
+	            case PanelAttachPoint.Bottom:
+	                dimensions.Y = (show) ? mainDimensions.Height - dimensions.Height : mainDimensions.Height;
+	                break;
+	            default:
+	                throw new ArgumentOutOfRangeException();
+	        }
+
+	        return dimensions;
+	    }
+
+	    private void SetShown(bool shouldShow)
+	    {
+	        if (PageRenderer?.View == null) return;
+            
+            UIView.Animate(0.25, 0, UIViewAnimationOptions.CurveEaseOut,
+                () =>
+                {
+                    PageRenderer.View.Frame = GetViewDimensions(shouldShow);
+                }, null);
+	    }
+
+	    protected override void OnElementChanged(ElementChangedEventArgs<PageView> e)
+	    {
+	        base.OnElementChanged(e);
+
+            ChangePage(Element.Content);
+            SetShown(Element.Shown);
+	    }
+
+	    protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
 			base.OnElementPropertyChanged(sender, e);
 			if (e.PropertyName == nameof(Element.Content))
 			{
 				ChangePage(Element?.Content);
+			}
+            else if (e.PropertyName == nameof(Element.Shown))
+			{
+			    SetShown(Element.Shown);
 			}
 		}
 	}

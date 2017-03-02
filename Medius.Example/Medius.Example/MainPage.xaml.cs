@@ -45,5 +45,11 @@ namespace Medius.Example
                 }
             };
         }
+
+        public void ToggleClick(object sender, EventArgs eventArgs)
+        {
+            FloatingPageView.Content = new Pages.FloatingPage();
+            FloatingPageView.Shown = true;
+        }
     }
 }

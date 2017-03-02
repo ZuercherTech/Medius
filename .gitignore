@@ -14,5 +14,7 @@ obj
 *.suo
 *.user
 *.pfx
+*.bak
+*.TMP
 
 *_ReSharper.*/

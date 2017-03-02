@@ -7,6 +7,7 @@
 
   <StackLayout>
     <StackLayout Orientation="Horizontal">
+      <Button Text="Toggle" Clicked="ToggleClick"></Button>
       <Button Text="Page 1" Clicked="Page1Click"></Button>
       <Button Text="Page 2" Clicked="Page2Click"></Button>
       <Button Text="Page 3" Clicked="Page3Click"></Button>
@@ -14,7 +15,15 @@
       <Button Text="No Page" Clicked="NoPageClick"></Button>
     </StackLayout>
   
-    <medius:PageView x:Name="PageView" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" />
+    <medius:PageView x:Name="PageView"
+                     HorizontalOptions="FillAndExpand" 
+                     VerticalOptions="FillAndExpand" />
+    
+    <medius:PageView x:Name="FloatingPageView"
+                     IsFloating="True"
+                     AttachTo="Left"
+                     WidthRequest="250"
+                     />
   </StackLayout>
 
 </ContentPage>

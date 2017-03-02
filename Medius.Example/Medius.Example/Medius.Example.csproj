@@ -41,6 +41,9 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\FloatingPage.xaml.cs">
+      <DependentUpon>FloatingPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\Page1.xaml.cs">
       <DependentUpon>Page1.xaml</DependentUpon>
     </Compile>
@@ -90,6 +93,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Pages\Page2.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Pages\FloatingPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
       <SubType>Designer</SubType>
     </EmbeddedResource>
