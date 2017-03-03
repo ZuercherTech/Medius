@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Linq;
 using Android.App;
 using Android.Views;
 using Android.Views.Animations;
@@ -73,6 +74,8 @@ namespace Medius.Droid.Controls
             }
             else
             {
+                PageRenderer.ViewGroup.Visibility = ViewStates.Visible;
+
                 var dimensions = GetViewDimensions(false);
                 PageRenderer.ViewGroup.LayoutParameters = new ViewGroup.LayoutParams((int) dimensions.Width,
                     (int) dimensions.Height);
@@ -81,15 +84,13 @@ namespace Medius.Droid.Controls
                 
                 parentView = (Context as Activity).Window.DecorView as ViewGroup;
                 
-                PageRenderer.ViewGroup.Visibility = ViewStates.Visible;
-
                 var metrics = this.Resources.DisplayMetrics;
                 Element.Content.Layout(new Rectangle(0, 0, 
                     dimensions.Width / metrics.Density, dimensions.Height / metrics.Density));
             }
 
             parentView.AddView(PageRenderer);
-
+            
             NeedsLayout = true;
             Invalidate();
         }
@@ -165,24 +166,16 @@ namespace Medius.Droid.Controls
             }
         }
 
-        protected override void OnElementChanged(ElementChangedEventArgs<PageView> e)
-        {
-            base.OnElementChanged(e);
-
-            ChangePage(Element.Content);
-            SetShown(Element.Shown);
-        }
-
         protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnElementPropertyChanged(sender, e);
-            if (e.PropertyName == nameof(Element.Content))
+            if (e.PropertyName == nameof(Element.Content) || e.PropertyName == "Renderer")
             {
-                ChangePage(Element?.Content);
+                Device.BeginInvokeOnMainThread(() => ChangePage(Element?.Content));
             }
             else if (e.PropertyName == nameof(Element.Shown))
             {
-                SetShown(Element.Shown);
+                Device.BeginInvokeOnMainThread(() => SetShown(Element.Shown));
             }
         }
     }

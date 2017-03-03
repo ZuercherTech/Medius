@@ -8,6 +8,8 @@ namespace Medius.Example
         public MainPage()
         {
             InitializeComponent();
+            FloatingPageView.Content = new Pages.FloatingPage();
+            PageView.Content = new Pages.Page1();
         }
 
         public void Page1Click(object sender, EventArgs eventArgs)
@@ -48,7 +50,6 @@ namespace Medius.Example
 
         public void ToggleClick(object sender, EventArgs eventArgs)
         {
-            FloatingPageView.Content = new Pages.FloatingPage();
             FloatingPageView.Shown = true;
         }
     }

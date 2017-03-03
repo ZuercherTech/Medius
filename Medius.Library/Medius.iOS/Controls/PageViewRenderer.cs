@@ -144,24 +144,16 @@ namespace Medius.iOS.Controls
                 }, null);
 	    }
 
-	    protected override void OnElementChanged(ElementChangedEventArgs<PageView> e)
-	    {
-	        base.OnElementChanged(e);
-
-            ChangePage(Element.Content);
-            SetShown(Element.Shown);
-	    }
-
 	    protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
 			base.OnElementPropertyChanged(sender, e);
-			if (e.PropertyName == nameof(Element.Content))
+			if (e.PropertyName == nameof(Element.Content) || e.PropertyName == "Renderer")
 			{
-				ChangePage(Element?.Content);
+                Device.BeginInvokeOnMainThread(() => ChangePage(Element?.Content));
 			}
             else if (e.PropertyName == nameof(Element.Shown))
 			{
-			    SetShown(Element.Shown);
+			    Device.BeginInvokeOnMainThread(() => SetShown(Element.Shown));
 			}
 		}
 	}
